@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eurobox Stacker</title>
+  <style>
+    :root {
+      --ink: #17312d;
+      --muted: #667a75;
+      --line: #dfe8e2;
+      --paper: #fbfcf8;
+      --panel: #ffffff;
+      --canvas: #edf4ee;
+      --accent: #de6d45;
+      --accent-dark: #ba4f2d;
+      --mint: #4d9780;
+      --mint-soft: #dbeee5;
+      --blue: #4a81a8;
+      --gold: #e2ae54;
+      --danger: #b95247;
+      --shadow: 0 16px 40px rgba(29, 55, 49, .08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--paper); color: var(--ink); }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell { max-width: 1540px; margin: 0 auto; padding: 24px 28px 36px; }
+    header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+    .eyebrow { margin: 0 0 7px; font-size: 11px; line-height: 1; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-dark); font-weight: 800; }
+    h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(32px, 4vw, 52px); font-weight: 500; letter-spacing: -.04em; line-height: .96; }
+    .tagline { margin: 10px 0 0; max-width: 600px; color: var(--muted); font-size: 14px; }
+    .header-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+    .button { border: 1px solid var(--line); color: var(--ink); background: var(--panel); border-radius: 11px; padding: 10px 14px; font-weight: 750; font-size: 12px; transition: .16s ease; }
+    .button:hover { border-color: #b6cbc1; transform: translateY(-1px); }
+    .button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .button.primary:hover { background: #245149; }
+    .button.ghost { background: transparent; }
+    .button.danger { color: var(--danger); }
+    .workspace { display: grid; grid-template-columns: 320px minmax(440px, 1fr) 290px; gap: 16px; align-items: start; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .catalogue, .summary { overflow: hidden; }
+    .panel-heading { padding: 18px 18px 13px; border-bottom: 1px solid var(--line); }
+    .panel-heading h2 { margin: 0; font-size: 15px; letter-spacing: -.01em; }
+    .panel-heading p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .filters { padding: 12px 14px 6px; display: grid; gap: 9px; }
+    .search { width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 10px; background: #fbfdfb; color: var(--ink); outline: none; font-size: 12px; }
+    .search:focus { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(77,151,128,.13); }
+    .segmented { display: flex; gap: 5px; flex-wrap: wrap; }
+    .filter { border: 1px solid var(--line); background: #fff; color: var(--muted); border-radius: 999px; padding: 6px 9px; font-size: 10px; font-weight: 800; }
+    .filter.active { color: #fff; background: var(--mint); border-color: var(--mint); }
+    #catalogueList { padding: 7px 10px 12px; max-height: calc(100vh - 250px); overflow: auto; }
+    .catalogue-card { position: relative; margin: 5px 0; padding: 12px 11px; border: 1px solid transparent; border-radius: 13px; background: #fafcf9; transition: .16s ease; }
+    .catalogue-card:hover { border-color: #c6ddd2; }
+    .catalogue-card.selected { border-color: var(--accent); background: #fff8f3; box-shadow: 0 5px 15px rgba(222,109,69,.12); }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .card-name { font-weight: 850; font-size: 12px; line-height: 1.25; }
+    .card-price { color: var(--accent-dark); font-weight: 850; font-size: 12px; white-space: nowrap; }
+    .card-meta { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; color: var(--muted); font-size: 10px; }
+    .chip { display: inline-flex; align-items: center; padding: 4px 6px; border-radius: 6px; background: #eef3ee; }
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-top: 9px; }
+    .card-actions a { color: var(--mint); font-size: 10px; font-weight: 800; text-decoration: none; }
+    .card-actions a:hover { text-decoration: underline; }
+    .mini-button { border: 0; border-radius: 8px; padding: 7px 9px; background: var(--ink); color: #fff; font-weight: 800; font-size: 10px; }
+    .mini-button:hover { background: #245149; }
+    .mini-button.selected-action { background: var(--accent); }
+    .stage-panel { padding: 12px; background: #dfece3; }
+    .stage-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 5px 12px; }
+    .stage-title { font-size: 12px; font-weight: 850; }
+    .stage-hint { color: var(--muted); font-size: 11px; text-align: right; }
+    .stage { position: relative; min-height: 610px; overflow: hidden; border: 1px solid #cdded2; border-radius: 15px; background: radial-gradient(circle at 50% 38%, #f9fcf9 0%, #eaf3ec 57%, #dbe9df 100%); }
+    .stage:before { content: ""; position: absolute; inset: 0; opacity: .38; pointer-events: none; background-image: linear-gradient(rgba(73,113,95,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(73,113,95,.06) 1px, transparent 1px); background-size: 34px 34px; }
+    #stackSvg { position: relative; z-index: 1; display: block; width: 100%; height: 610px; }
+    .stage-empty { position: absolute; z-index: 2; inset: 0; display: grid; place-items: center; pointer-events: none; }
+    .stage-empty[hidden] { display: none; }
+    .stage-empty-card { max-width: 280px; padding: 20px; border: 1px dashed #a9c4b5; border-radius: 15px; text-align: center; color: var(--muted); background: rgba(255,255,255,.7); }
+    .stage-empty-card strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 13px; }
+    .stage-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 10px 3px 2px; color: var(--muted); font-size: 11px; }
+    .selected-product { color: var(--ink); font-weight: 800; }
+    .placement-count { color: var(--mint); font-weight: 800; }
+    .placement-choices { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 3px 0; }
+    .placement-choices[hidden] { display: none; }
+    .placement-choice { border: 1px solid #bfd8ca; border-radius: 8px; padding: 6px 8px; background: rgba(255,255,255,.72); color: var(--ink); font-size: 10px; font-weight: 800; }
+    .placement-choice:hover { border-color: var(--accent); background: #fff8f3; }
+    .summary-section { padding: 16px; border-bottom: 1px solid var(--line); }
+    .summary-section:last-child { border-bottom: 0; }
+    .summary-section h3 { margin: 0 0 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metric { padding: 11px 10px; border-radius: 11px; background: #f5f8f4; }
+    .metric strong { display: block; font-size: 20px; letter-spacing: -.05em; }
+    .metric span { display: block; margin-top: 2px; font-size: 10px; color: var(--muted); }
+    .total { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+    .total strong { font-size: 29px; letter-spacing: -.05em; }
+    .total small { color: var(--muted); font-size: 10px; line-height: 1.3; text-align: right; }
+    .notice { padding: 11px 12px; border-radius: 11px; background: #fff4db; color: #805d20; font-size: 11px; line-height: 1.45; }
+    .notice strong { display: block; margin-bottom: 3px; color: #684813; }
+    .notice.lid { background: #e6f2ee; color: #2b6354; }
+    .notice.lid strong { color: #205343; }
+    .notice.error { background: #fff0ed; color: #8e3e36; }
+    .notice.error strong { color: #75332c; }
+    .inspector-empty { color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .inspector-name { font-size: 15px; font-weight: 900; line-height: 1.25; }
+    .inspector-id { margin-top: 3px; color: var(--muted); font-size: 10px; }
+    .inspector-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 13px; }
+    .inspector-grid div { padding: 8px; border-radius: 8px; background: #f5f8f4; }
+    .inspector-grid b { display: block; font-size: 11px; }
+    .inspector-grid span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+    .stack-items { display: grid; gap: 6px; max-height: 260px; overflow: auto; }
+    .stack-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 9px; background: #f7faf7; color: var(--ink); text-align: left; }
+    .stack-item:hover, .stack-item.selected { border-color: var(--accent); background: #fff8f3; }
+    .stack-swatch { width: 10px; height: 24px; flex: 0 0 10px; border-radius: 4px; background: var(--mint); }
+    .stack-swatch.lid { background: var(--gold); }
+    .stack-item-copy { min-width: 0; }
+    .stack-item-copy strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+    .stack-item-copy span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+    .stack-item-price { margin-left: auto; font-size: 10px; font-weight: 800; }
+    .source-note { margin-top: 10px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .source-note a { color: var(--mint); font-weight: 800; }
+    .bottom-note { margin: 16px 4px 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .bottom-note kbd { padding: 2px 4px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+    .svg-object { cursor: pointer; }
+    .svg-object .face { stroke: rgba(23,49,45,.42); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+    .svg-object .top { fill: #70b39b; }
+    .svg-object .front { fill: #4f967e; }
+    .svg-object .side { fill: #397761; }
+    .svg-object.alt .top { fill: #77a6c4; }
+    .svg-object.alt .front { fill: #4f83a1; }
+    .svg-object.alt .side { fill: #356d89; }
+    .svg-object.lid .top { fill: #e6b35c; }
+    .svg-object.lid .front { fill: #cb9340; }
+    .svg-object.lid .side { fill: #aa7427; }
+    .svg-object.selected .face { stroke: #ef6f44; stroke-width: 4; }
+    .svg-object text { pointer-events: none; fill: #fff; font-size: 12px; font-weight: 900; text-anchor: middle; dominant-baseline: middle; paint-order: stroke; stroke: rgba(23,49,45,.5); stroke-width: 3px; }
+    .svg-ghost { cursor: pointer; opacity: .46; }
+    .svg-ghost .ghost-top { fill: #f08b62; stroke: #b9512f; stroke-width: 2; stroke-dasharray: 7 5; vector-effect: non-scaling-stroke; }
+    .svg-ghost text { fill: #8f422a; text-anchor: middle; font-size: 11px; font-weight: 900; pointer-events: none; }
+    .floor-shadow { fill: rgba(47,83,66,.14); }
+    @media (max-width: 1180px) {
+      .workspace { grid-template-columns: 285px minmax(400px, 1fr); }
+      .summary { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); }
+      .summary-section { border-right: 1px solid var(--line); border-bottom: 0; }
+      .summary-section:last-child { border-right: 0; }
+    }
+    @media (max-width: 820px) {
+      .app-shell { padding: 18px 12px 26px; }
+      header { display: block; }
+      .header-actions { justify-content: flex-start; margin-top: 15px; }
+      .workspace { display: flex; flex-direction: column; }
+      .catalogue, .stage-panel, .summary { width: 100%; }
+      .catalogue { order: 2; }
+      .stage-panel { order: 1; }
+      .summary { order: 3; display: block; }
+      .summary-section { border-right: 0; border-bottom: 1px solid var(--line); }
+      #catalogueList { max-height: 440px; }
+      .stage { min-height: 460px; }
+      #stackSvg { height: 460px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div>
+        <p class="eyebrow">Euro-standard storage planning</p>
+        <h1>Eurobox Stacker</h1>
+        <p class="tagline">Build a physically valid stack from real catalogue sizes. Every placement, measurement and price comes from the model.</p>
+      </div>
+      <div class="header-actions">
+        <button class="button" id="newStackButton">New stack</button>
+        <button class="button ghost" id="resetButton">Reset demo</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="panel catalogue">
+        <div class="panel-heading">
+          <h2>Catalogue</h2>
+          <p>Choose a box, then click a highlighted surface in the stack.</p>
+        </div>
+        <div class="filters">
+          <input class="search" id="searchInput" type="search" placeholder="Search size, height or SKU" aria-label="Search catalogue" />
+          <div class="segmented" id="familyFilters">
+            <button class="filter active" data-family="all">All sizes</button>
+            <button class="filter" data-family="600x400">600 × 400</button>
+            <button class="filter" data-family="400x300">400 × 300</button>
+            <button class="filter" data-family="300x200">300 × 200</button>
+            <button class="filter" data-family="lid">Lids</button>
+          </div>
+        </div>
+        <div id="catalogueList"></div>
+      </aside>
+
+      <section class="panel stage-panel">
+        <div class="stage-toolbar">
+          <div class="stage-title">Isometric stack view</div>
+          <div class="stage-hint" id="stageHint">Click an item to inspect it</div>
+        </div>
+        <div class="stage">
+          <svg id="stackSvg" viewBox="0 0 900 610" role="img" aria-label="Isometric rendering of the current Eurobox stack"></svg>
+          <div class="stage-empty" id="stageEmpty" hidden>
+            <div class="stage-empty-card"><strong>Your stack is empty</strong>Select a catalogue item to place a box on the floor.</div>
+          </div>
+        </div>
+        <div class="stage-footer">
+          <div>Selected: <span class="selected-product" id="selectedProductLabel">none</span></div>
+          <div class="placement-count" id="placementCount">Choose a product to see valid positions</div>
+        </div>
+        <div class="placement-choices" id="placementChoices" hidden></div>
+      </section>
+
+      <aside class="panel summary">
+        <section class="summary-section">
+          <h3>Stack summary</h3>
+          <div class="metrics">
+            <div class="metric"><strong id="metricWidth">0</strong><span>max width · mm</span></div>
+            <div class="metric"><strong id="metricDepth">0</strong><span>max depth · mm</span></div>
+            <div class="metric"><strong id="metricHeight">0</strong><span>stack height · mm</span></div>
+            <div class="metric"><strong id="metricBoxes">0</strong><span>boxes</span></div>
+            <div class="metric"><strong id="metricLids">0</strong><span>lids</span></div>
+          </div>
+        </section>
+        <section class="summary-section">
+          <div class="total"><div><h3>Estimated total</h3><strong id="metricPrice">£0.00</strong></div><small>guide prices<br />incl. VAT</small></div>
+        </section>
+        <section class="summary-section" id="feedbackSection">
+          <h3>Placement guide</h3>
+          <div class="notice" id="feedback"><strong>Start here</strong>Select a catalogue item to see its valid snap positions.</div>
+        </section>
+        <section class="summary-section">
+          <h3>Selected item</h3>
+          <div id="inspector"><div class="inspector-empty">Click a box, lid, or stack item to inspect it. Use the remove and replace controls once an item is selected.</div></div>
+        </section>
+        <section class="summary-section">
+          <h3>In this stack</h3>
+          <div class="stack-items" id="stackItems"></div>
+          <div class="source-note">Catalogue references are linked to <a href="https://storageboxshop.co.uk/collections/euro-solid-storage-boxes" target="_blank" rel="noreferrer">Storage Box Shop’s Euro solid range</a>.</div>
+        </section>
+      </aside>
+    </main>
+    <p class="bottom-note">Support rule: a box must sit on one continuous box or lid surface. A lid may span a fully covered tiled level, which is why it is the required bridge for arrangements such as four 300 × 200 boxes under one 600 × 400 box. Changes save automatically in this browser. Press <kbd>Esc</kbd> to clear selection.</p>
+  </div>
+
+  <script>
+    'use strict';
+
+    // Catalogue values are kept here, separate from the drawing and placement logic.
+    const CATALOGUE = [
+      { id:'euro-600-400-120', type:'box', family:'600x400', name:'24L shallow Euro box', sku:'64120-S', width:600, depth:400, height:120, capacity:'24 L', price:11.04, source:'https://storageboxshop.co.uk/products/24l-600x400x120mm-shallow-euro-stacking-container' },
+      { id:'euro-600-400-175', type:'box', family:'600x400', name:'34L industrial Euro box', sku:'64175-SS-GREY', width:600, depth:400, height:175, capacity:'34 L', price:13.19, source:'https://storageboxshop.co.uk/products/34l-600x400x175mm-industrial-grade-euro-size-stacking-box' },
+      { id:'euro-600-400-220', type:'box', family:'600x400', name:'42L Euro stacking box', sku:'64220-S', width:600, depth:400, height:220, capacity:'42 L', price:15.59, source:'https://storageboxshop.co.uk/collections/euro-solid-storage-boxes' },
+      { id:'euro-600-400-280', type:'box', family:'600x400', name:'51L food-approved Euro box', sku:'64280-RS', width:600, depth:400, height:280, capacity:'51 L', price:20.39, source:'https://storageboxshop.co.uk/products/51l-600x400x280mm-euro-stancking-container-with-lid-food-approved' },
+      { id:'euro-600-400-320', type:'box', family:'600x400', name:'61L tall Euro box', sku:'64320-S', width:600, depth:400, height:320, capacity:'61 L', price:25.19, source:'https://storageboxshop.co.uk/collections/euro-solid-storage-boxes' },
+      { id:'euro-400-300-75', type:'box', family:'400x300', name:'6L shallow Euro tray', sku:'403007', width:400, depth:300, height:75, capacity:'6 L', price:10.79, source:'https://storageboxshop.co.uk/collections/euro-solid-storage-boxes' },
+      { id:'euro-400-300-120', type:'box', family:'400x300', name:'10L half-size Euro box', sku:'403012', width:400, depth:300, height:120, capacity:'10 L', price:12.99, source:'https://storageboxshop.co.uk/collections/euro-solid-storage-boxes' },
+      { id:'euro-400-300-175', type:'box', family:'400x300', name:'15L half-size Euro box', sku:'403017', width:400, depth:300, height:175, capacity:'15 L', price:15.99, source:'https://storageboxshop.co.uk/collections/euro-solid-storage-boxes' },
+      { id:'euro-400-300-230', type:'box', family:'400x300', name:'20L half-size Euro box', sku:'403023', width:400, depth:300, height:230, capacity:'20 L', price:18.99, source:'https://storageboxshop.co.uk/collections/euro-solid-storage-boxes' },
+      { id:'euro-400-300-320', type:'box', family:'400x300', name:'30L half-size Euro box', sku:'403032', width:400, depth:300, height:320, capacity:'30 L', price:28.99, source:'https://storageboxshop.co.uk/collections/euro-solid-storage-boxes' },
+      { id:'euro-300-200-120', type:'box', family:'300x200', name:'5L extra-small Euro box', sku:'32120-SS-GREY', width:300, depth:200, height:120, capacity:'5 L', price:5.99, source:'https://storageboxshop.co.uk/products/5-litre-300x200x120mm-extra-small-euro-box' },
+      { id:'euro-300-200-175', type:'box', family:'300x200', name:'7.5L mini Euro box', sku:'32175-SO-GREY', width:300, depth:200, height:175, capacity:'7.5 L', price:6.60, source:'https://storageboxshop.co.uk/products/7-5-litre-300x200x175mm-mini-euro-box' },
+      { id:'lid-600-400', type:'lid', family:'lid', name:'Place-on support lid', sku:'LID64P', width:600, depth:400, height:30, capacity:'support surface', price:6.84, source:'https://storageboxshop.co.uk/products/place-on-lid-for-600x400mm-euro-box' },
+      { id:'lid-400-300', type:'lid', family:'lid', name:'Place-on half-size lid', sku:'LID43P', width:400, depth:300, height:25, capacity:'support surface', price:4.32, source:'https://storageboxshop.co.uk/collections/lids' }
+    ];
+    const BOXES = CATALOGUE.filter(item => item.type === 'box');
+    const LIDS = CATALOGUE.filter(item => item.type === 'lid');
+    const STORAGE_KEY = 'eurobox-stacker-v1';
+    const EPS = 0.001;
+    let state = { items: [], selectedProductId: 'euro-300-200-175', selectedItemId: null, familyFilter: 'all', search: '', notice: null };
+    let nextNumber = 1;
+
+    const $ = id => document.getElementById(id);
+    const product = id => CATALOGUE.find(item => item.id === id);
+    const labelDims = item => `${item.width} × ${item.depth} × ${item.height} mm`;
+    const money = value => new Intl.NumberFormat('en-GB', { style:'currency', currency:'GBP' }).format(value);
+    const same = (a,b) => Math.abs(a-b) < EPS;
+    const rectContains = (outer, inner) => inner.x >= outer.x - EPS && inner.y >= outer.y - EPS && inner.x + inner.w <= outer.x + outer.w + EPS && inner.y + inner.d <= outer.y + outer.d + EPS;
+    const zTop = item => item.z + item.height;
+    const orient = (item, rotated) => rotated ? { w:item.depth, d:item.width } : { w:item.width, d:item.depth };
+    const displayName = item => item.type === 'lid' ? `${item.width} × ${item.depth} support lid` : item.name;
+
+    function makeItem(productId, x, y, z, rotated = false) {
+      const p = product(productId);
+      const dims = orient(p, rotated);
+      return { instanceId:`item-${nextNumber++}`, productId, type:p.type, x, y, z, w:dims.w, d:dims.d, height:p.height, rotated:!!rotated };
+    }
+
+    function resetDemo() {
+      nextNumber = 1;
+      state.items = [makeItem('euro-600-400-175', 0, 0, 0)];
+      state.selectedProductId = 'euro-300-200-175';
+      state.selectedItemId = state.items[0].instanceId;
+      state.notice = null;
+      save(); render();
+    }
+
+    function newStack() {
+      nextNumber = 1;
+      state.items = [];
+      state.selectedItemId = null;
+      state.selectedProductId = 'euro-600-400-175';
+      state.notice = null;
+      save(); render();
+    }
+
+    function save() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items:state.items, selectedProductId:state.selectedProductId })); } catch (error) { /* Some private file contexts disable storage; the in-memory stack still works. */ }
+    }
+
+    function load() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved && Array.isArray(saved.items)) {
+          state.items = saved.items;
+          state.selectedProductId = saved.selectedProductId || 'euro-300-200-175';
+          nextNumber = state.items.reduce((max, item) => Math.max(max, Number((item.instanceId || '').split('-').pop()) || 0), 0) + 1;
+          return;
+        }
+      } catch (error) { /* Fall through to the demo stack. */ }
+      resetDemo();
+    }
+
+    function overlaps3D(a, b) {
+      return a.x < b.x + b.w - EPS && a.x + a.w > b.x + EPS && a.y < b.y + b.d - EPS && a.y + a.d > b.y + EPS && a.z < b.z + b.height - EPS && a.z + a.height > b.z + EPS;
+    }
+
+    function hasCollision(candidate, items = state.items, ignoreId = null) {
+      return items.some(item => item.instanceId !== ignoreId && overlaps3D(candidate, item));
+    }
+
+    function coverageByBoxes(target, items = state.items) {
+      const supports = items.filter(item => item.type === 'box' && same(zTop(item), target.z) && item.x < target.x + target.w - EPS && item.x + item.w > target.x + EPS && item.y < target.y + target.d - EPS && item.y + item.d > target.y + EPS);
+      if (!supports.length) return { covered:false, count:0 };
+      const xs = [target.x, target.x + target.w];
+      const ys = [target.y, target.y + target.d];
+      supports.forEach(s => {
+        xs.push(Math.max(target.x, s.x), Math.min(target.x + target.w, s.x + s.w));
+        ys.push(Math.max(target.y, s.y), Math.min(target.y + target.d, s.y + s.d));
+      });
+      const unique = values => [...new Set(values.map(v => Math.round(v * 1000) / 1000))].sort((a,b) => a-b);
+      const ux = unique(xs), uy = unique(ys);
+      for (let ix=0; ix<ux.length-1; ix++) for (let iy=0; iy<uy.length-1; iy++) {
+        const cx = (ux[ix] + ux[ix+1]) / 2, cy = (uy[iy] + uy[iy+1]) / 2;
+        if (!supports.some(s => cx > s.x + EPS && cx < s.x + s.w - EPS && cy > s.y + EPS && cy < s.y + s.d - EPS)) return { covered:false, count:supports.length };
+      }
+      return { covered:true, count:supports.length };
+    }
+
+    function directSupport(candidate, items = state.items) {
+      if (same(candidate.z, 0)) return { valid:true, kind:'floor', support:null };
+      if (candidate.type === 'lid') {
+        const coverage = coverageByBoxes(candidate, items);
+        return coverage.covered ? { valid:true, kind:'tiled', support:null, count:coverage.count } : { valid:false };
+      }
+      const support = items.find(item => same(zTop(item), candidate.z) && rectContains(item, { x:candidate.x, y:candidate.y, w:candidate.w, d:candidate.d }));
+      return support ? { valid:true, kind:'single', support } : { valid:false };
+    }
+
+    function isValidCandidate(candidate, items = state.items) {
+      return !hasCollision(candidate, items) && directSupport(candidate, items).valid;
+    }
+
+    function candidateKey(candidate) { return [candidate.x, candidate.y, candidate.z, candidate.w, candidate.d].join('|'); }
+
+    function getCandidates(productId, items = state.items) {
+      const p = product(productId);
+      if (!p) return [];
+      const candidates = [];
+      const seen = new Set();
+      const add = (x,y,z,rotated) => {
+        const dims = orient(p, rotated);
+        const candidate = { productId, type:p.type, x, y, z, w:dims.w, d:dims.d, height:p.height, rotated };
+        const key = candidateKey(candidate);
+        if (!seen.has(key) && isValidCandidate(candidate, items)) { seen.add(key); candidates.push(candidate); }
+      };
+      if (!items.length) {
+        add(0, 0, 0, false);
+        if (p.width !== p.depth) add(0, 0, 0, true);
+        return candidates;
+      }
+      // A single-stack v1 has one floor footprint; additional items snap to surfaces above it.
+      const supports = items.filter(item => same(zTop(item), item.z + item.height));
+      for (const rotated of (p.width === p.depth ? [false] : [false, true])) {
+        const dims = orient(p, rotated);
+        for (const support of supports) {
+          if (dims.w > support.w + EPS || dims.d > support.d + EPS) continue;
+          const xs = [support.x, support.x + support.w - dims.w];
+          const ys = [support.y, support.y + support.d - dims.d];
+          for (const x of xs) for (const y of ys) add(x, y, zTop(support), rotated);
+        }
+      }
+      return candidates;
+    }
+
+    function getLidSuggestions(boxProductId, items = state.items) {
+      const p = product(boxProductId);
+      if (!p || p.type !== 'box') return [];
+      const suggestions = [];
+      const seen = new Set();
+      LIDS.forEach(lid => {
+        for (const rotated of (lid.width === lid.depth ? [false] : [false, true])) {
+          const dims = orient(lid, rotated);
+          if (dims.w !== p.width || dims.d !== p.depth) continue;
+          const levelSupports = items.filter(item => item.type === 'box');
+          for (const support of levelSupports) {
+            const z = zTop(support);
+            const xs = [support.x, support.x + support.w - dims.w];
+            const ys = [support.y, support.y + support.d - dims.d];
+            for (const x of xs) for (const y of ys) {
+              const lidCandidate = { productId:lid.id, type:'lid', x, y, z, w:dims.w, d:dims.d, height:lid.height, rotated };
+              const key = candidateKey(lidCandidate);
+              const coverage = coverageByBoxes(lidCandidate, items);
+              if (!seen.has(key) && coverage.covered && coverage.count > 1 && !hasCollision(lidCandidate, items)) { seen.add(key); suggestions.push({ ...lidCandidate, lid, count:coverage.count }); }
+            }
+          }
+        }
+      });
+      return suggestions;
+    }
+
+    function allStateValid(items) {
+      for (let i=0; i<items.length; i++) {
+        if (hasCollision(items[i], items, items[i].instanceId)) return false;
+        if (!directSupport(items[i], items.filter(other => other.instanceId !== items[i].instanceId)).valid) return false;
+      }
+      return true;
+    }
+
+    function addCandidate(candidate) {
+      const p = product(candidate.productId);
+      if (!p) return;
+      const item = makeItem(candidate.productId, candidate.x, candidate.y, candidate.z, candidate.rotated);
+      if (!isValidCandidate(item)) { setNotice('error', 'That snap position is no longer available', 'The stack changed, so choose one of the highlighted positions.'); return; }
+      state.items.push(item);
+      state.selectedItemId = item.instanceId;
+      state.notice = { type:'success', title:`Added ${displayName(p)}`, text:`Placed at ${item.x}, ${item.y}, ${item.z} mm.` };
+      save(); render();
+    }
+
+    function addLidSuggestion(suggestion) {
+      const lid = makeItem(suggestion.productId, suggestion.x, suggestion.y, suggestion.z, suggestion.rotated);
+      if (!isValidCandidate(lid)) { setNotice('error', 'The suggested lid position is no longer available', 'Choose a highlighted position and try again.'); return; }
+      state.items.push(lid);
+      state.selectedItemId = lid.instanceId;
+      state.notice = { type:'success', title:`Added ${suggestion.lid.width} × ${suggestion.lid.depth} support lid`, text:'The continuous surface is now ready for the selected box.' };
+      save(); render();
+    }
+
+    function selectedItem() { return state.items.find(item => item.instanceId === state.selectedItemId) || null; }
+
+    function setNotice(type, title, text) { state.notice = { type, title, text }; render(); }
+
+    function removeSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      const next = state.items.filter(other => other.instanceId !== item.instanceId);
+      if (!allStateValid(next)) {
+        setNotice('error', 'Cannot remove this item safely', item.type === 'lid' ? 'Removing this lid would leave a box above unsupported.' : 'Another box or lid above depends on this surface. Remove the upper items first.');
+        return;
+      }
+      state.items = next;
+      state.selectedItemId = null;
+      state.notice = { type:'success', title:'Item removed', text:'The remaining stack is still structurally valid.' };
+      save(); render();
+    }
+
+    function replaceSelected(productId) {
+      const old = selectedItem();
+      const p = product(productId);
+      if (!old || old.type !== 'box' || !p || p.type !== 'box') return;
+      const without = state.items.filter(item => item.instanceId !== old.instanceId);
+      const choices = [];
+      for (const rotated of (p.width === p.depth ? [false] : [false, true])) {
+        const dims = orient(p, rotated);
+        const candidate = { productId, type:'box', x:old.x, y:old.y, z:old.z, w:dims.w, d:dims.d, height:p.height, rotated };
+        if (isValidCandidate(candidate, without)) choices.push(candidate);
+      }
+      if (!choices.length || !allStateValid(without)) {
+        setNotice('error', 'This replacement would break the stack', 'Remove or reposition the boxes above this item first, then try again.');
+        return;
+      }
+      const replacement = makeItem(productId, choices[0].x, choices[0].y, choices[0].z, choices[0].rotated);
+      const updated = [...without, replacement];
+      if (!allStateValid(updated)) {
+        setNotice('error', 'This replacement would leave an upper item unsupported', 'Choose a matching height or remove the items above first.');
+        return;
+      }
+      state.items = updated;
+      state.selectedItemId = replacement.instanceId;
+      state.selectedProductId = productId;
+      state.notice = { type:'success', title:'Box replaced', text:`Now using ${displayName(p)}.` };
+      save(); render();
+    }
+
+    function selectProduct(id) {
+      state.selectedProductId = id;
+      state.notice = null;
+      render();
+    }
+
+    function selectItem(id) {
+      state.selectedItemId = id;
+      state.notice = null;
+      render();
+    }
+
+    function renderCatalogue() {
+      const query = state.search.trim().toLowerCase();
+      const list = CATALOGUE.filter(item => {
+        const matchFamily = state.familyFilter === 'all' || item.family === state.familyFilter;
+        const haystack = `${item.name} ${item.sku} ${item.width} ${item.depth} ${item.height} ${item.capacity}`.toLowerCase();
+        return matchFamily && (!query || haystack.includes(query));
+      });
+      $('catalogueList').innerHTML = list.length ? list.map(item => {
+        const selected = item.id === state.selectedProductId;
+        const isLid = item.type === 'lid';
+        return `<article class="catalogue-card ${selected ? 'selected' : ''}" data-product="${item.id}">
+          <div class="card-top"><div class="card-name">${displayName(item)}</div><div class="card-price">${money(item.price)}</div></div>
+          <div class="card-meta"><span class="chip">${labelDims(item)}</span><span class="chip">${item.capacity}</span></div>
+          <div class="card-actions"><a href="${item.source}" target="_blank" rel="noreferrer">View product ↗</a><button class="mini-button ${selected ? 'selected-action' : ''}" data-select="${item.id}">${selected ? 'Selected' : isLid ? 'Select lid' : 'Select box'}</button></div>
+        </article>`;
+      }).join('') : `<div class="inspector-empty" style="padding:14px">No catalogue items match that search.</div>`;
+      $('catalogueList').querySelectorAll('[data-select]').forEach(button => button.addEventListener('click', event => { event.stopPropagation(); selectProduct(button.dataset.select); }));
+      $('catalogueList').querySelectorAll('[data-product]').forEach(card => card.addEventListener('click', () => selectProduct(card.dataset.product)));
+    }
+
+    function renderSummary() {
+      const width = state.items.length ? Math.max(...state.items.map(item => item.x + item.w)) - Math.min(0, Math.min(...state.items.map(item => item.x))) : 0;
+      const depth = state.items.length ? Math.max(...state.items.map(item => item.y + item.d)) - Math.min(0, Math.min(...state.items.map(item => item.y))) : 0;
+      const height = state.items.length ? Math.max(...state.items.map(zTop)) : 0;
+      const boxes = state.items.filter(item => item.type === 'box').length;
+      const lids = state.items.filter(item => item.type === 'lid').length;
+      const price = state.items.reduce((sum, item) => sum + product(item.productId).price, 0);
+      $('metricWidth').textContent = Math.round(width);
+      $('metricDepth').textContent = Math.round(depth);
+      $('metricHeight').textContent = Math.round(height);
+      $('metricBoxes').textContent = boxes;
+      $('metricLids').textContent = lids;
+      $('metricPrice').textContent = money(price);
+      $('stackItems').innerHTML = state.items.length ? state.items.map(item => `<button class="stack-item ${item.instanceId === state.selectedItemId ? 'selected' : ''}" data-stack-item="${item.instanceId}"><span class="stack-swatch ${item.type === 'lid' ? 'lid' : ''}"></span><span class="stack-item-copy"><strong>${displayName(product(item.productId))}</strong><span>${item.w} × ${item.d} × ${item.height} mm · z ${item.z}</span></span><span class="stack-item-price">${money(product(item.productId).price)}</span></button>`).join('') : '<div class="inspector-empty">No items yet.</div>';
+      $('stackItems').querySelectorAll('[data-stack-item]').forEach(button => button.addEventListener('click', () => selectItem(button.dataset.stackItem)));
+    }
+
+    function renderFeedback(candidates, lidSuggestions) {
+      const selected = product(state.selectedProductId);
+      const el = $('feedback');
+      const selectedItemObj = selectedItem();
+      if (state.notice) {
+        el.className = `notice ${state.notice.type === 'error' ? 'error' : state.notice.type === 'success' ? 'lid' : ''}`;
+        el.innerHTML = `<strong>${state.notice.title}</strong>${state.notice.text}`;
+        return;
+      }
+      if (!selected) { el.className = 'notice'; el.innerHTML = '<strong>Select a product</strong>Choose a box or lid from the catalogue.'; return; }
+      if (selected.type === 'lid') {
+        if (candidates.length) { el.className = 'notice lid'; el.innerHTML = `<strong>${candidates.length} valid lid position${candidates.length === 1 ? '' : 's'}</strong>A lid can rest on a fully covered level. Click a gold-highlighted position.`; }
+        else { el.className = 'notice'; el.innerHTML = '<strong>No supported lid position</strong>This lid needs one box or a tiled level with matching dimensions beneath it.'; }
+        return;
+      }
+      if (candidates.length) {
+        el.className = 'notice lid';
+        el.innerHTML = `<strong>${candidates.length} valid position${candidates.length === 1 ? '' : 's'}</strong>Click a coral highlight on the stack. Rotated positions are included where the footprint allows it.`;
+      } else if (lidSuggestions.length) {
+        const suggestion = lidSuggestions[0];
+        el.className = 'notice lid';
+        el.innerHTML = `<strong>${suggestion.w} × ${suggestion.d} support lid required</strong>This box would bridge ${suggestion.count} independent boxes. Add the recommended ${suggestion.lid.width} × ${suggestion.lid.depth} lid for ${money(suggestion.lid.price)}. <button class="mini-button" id="addSuggestedLid" style="margin-top:8px">Add support lid</button>`;
+        $('addSuggestedLid').addEventListener('click', () => addLidSuggestion(suggestion));
+      } else if (!state.items.length) {
+        el.className = 'notice'; el.innerHTML = '<strong>Place on the floor</strong>This is the first item in the stack.';
+      } else if (selectedItemObj) {
+        el.className = 'notice'; el.innerHTML = '<strong>No valid snap position</strong>This footprint cannot fit on any available continuous surface.';
+      } else {
+        el.className = 'notice'; el.innerHTML = '<strong>No valid snap position</strong>Select a smaller item, or add a support lid where a tiled level needs one.';
+      }
+    }
+
+    function renderPlacementChoices(candidates, lidSuggestions) {
+      const el = $('placementChoices');
+      if (candidates.length) {
+        el.hidden = false;
+        el.innerHTML = candidates.map((candidate, index) => `<button class="placement-choice" data-place-choice="${index}">${candidate.x}, ${candidate.y}, ${candidate.z} · ${candidate.rotated ? 'rotated' : 'standard'}</button>`).join('');
+        el.querySelectorAll('[data-place-choice]').forEach(button => button.addEventListener('click', () => addCandidate(candidates[Number(button.dataset.placeChoice)])));
+      } else if (lidSuggestions.length) {
+        el.hidden = false;
+        el.innerHTML = lidSuggestions.map((suggestion, index) => `<button class="placement-choice" data-lid-choice="${index}">Add lid at ${suggestion.x}, ${suggestion.y}, ${suggestion.z}</button>`).join('');
+        el.querySelectorAll('[data-lid-choice]').forEach(button => button.addEventListener('click', () => addLidSuggestion(lidSuggestions[Number(button.dataset.lidChoice)])));
+      } else {
+        el.hidden = true;
+        el.innerHTML = '';
+      }
+    }
+
+    function renderInspector() {
+      const item = selectedItem();
+      const el = $('inspector');
+      if (!item) { el.innerHTML = '<div class="inspector-empty">Click a box, lid, or stack item to inspect it. Use the remove and replace controls once an item is selected.</div>'; return; }
+      const p = product(item.productId);
+      const replacementOptions = item.type === 'box' ? BOXES.filter(candidate => candidate.id !== item.productId && candidate.width <= Math.max(item.w, item.d) && candidate.depth <= Math.max(item.w, item.d)).slice(0, 5) : [];
+      el.innerHTML = `<div class="inspector-name">${displayName(p)}</div><div class="inspector-id">${p.sku} · ${item.rotated ? 'rotated 90°' : 'standard orientation'}</div>
+        <div class="inspector-grid"><div><b>${item.w} × ${item.d}</b><span>footprint · mm</span></div><div><b>${item.height}</b><span>height · mm</span></div><div><b>${item.x}, ${item.y}, ${item.z}</b><span>position · mm</span></div><div><b>${money(p.price)}</b><span>guide price</span></div></div>
+        <div style="display:flex; gap:7px; margin-top:13px"><button class="button danger" id="removeSelected" style="flex:1">Remove</button><a class="button" href="${p.source}" target="_blank" rel="noreferrer" style="flex:1; text-align:center; text-decoration:none">Source ↗</a></div>
+        ${replacementOptions.length ? `<div style="margin-top:14px"><h3 style="margin:0 0 8px; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted)">Replace with</h3><div style="display:grid; gap:5px">${replacementOptions.map(candidate => `<button class="stack-item" data-replace="${candidate.id}"><span class="stack-swatch"></span><span class="stack-item-copy"><strong>${candidate.name}</strong><span>${candidate.width} × ${candidate.depth} × ${candidate.height} mm</span></span><span class="stack-item-price">${money(candidate.price)}</span></button>`).join('')}</div></div>` : ''}`;
+      $('removeSelected').addEventListener('click', removeSelected);
+      el.querySelectorAll('[data-replace]').forEach(button => button.addEventListener('click', () => replaceSelected(button.dataset.replace)));
+    }
+
+    function isoPoint(x, y, z) {
+      return { x:(x-y)*.82, y:(x+y)*.41-z*.92 };
+    }
+    function polygon(points) { return points.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' '); }
+    function renderSvg(candidates) {
+      const svg = $('stackSvg');
+      const all = state.items.map(item => ({ x:item.x, y:item.y, z:item.z, w:item.w, d:item.d, h:item.height }));
+      // Keep one visual hit target per anchor. Standard orientation is first in the
+      // candidate list, while every orientation remains available in the explicit
+      // snap-target buttons below the view.
+      const ghosts = candidates.filter((candidate, index) => candidates.findIndex(other => same(other.x, candidate.x) && same(other.y, candidate.y) && same(other.z, candidate.z)) === index).map(c => ({ x:c.x, y:c.y, z:c.z, w:c.w, d:c.d, h:c.height, candidate:c }));
+      const points = [];
+      [...all, ...ghosts].forEach(item => {
+        [isoPoint(item.x,item.y,item.z), isoPoint(item.x+item.w,item.y,item.z), isoPoint(item.x+item.w,item.y+item.d,item.z), isoPoint(item.x,item.y+item.d,item.z), isoPoint(item.x,item.y,item.z+item.h), isoPoint(item.x+item.w,item.y,item.z+item.h), isoPoint(item.x+item.w,item.y+item.d,item.z+item.h), isoPoint(item.x,item.y+item.d,item.z+item.h)].forEach(p => points.push(p));
+      });
+      if (!points.length) { svg.innerHTML = ''; return; }
+      const minX = Math.min(...points.map(p=>p.x)), maxX = Math.max(...points.map(p=>p.x)), minY = Math.min(...points.map(p=>p.y)), maxY = Math.max(...points.map(p=>p.y));
+      const scale = Math.min(760 / Math.max(1, maxX-minX), 500 / Math.max(1, maxY-minY));
+      const transform = p => ({ x:450 + (p.x-(minX+maxX)/2)*scale, y:315 + (p.y-(minY+maxY)/2)*scale });
+      let out = '';
+      const floorA = transform(isoPoint(Math.min(0, Math.min(...state.items.map(i=>i.x),0))-120, Math.min(0, Math.min(...state.items.map(i=>i.y),0))-120, 0));
+      const floorB = transform(isoPoint(Math.max(600, Math.max(...state.items.map(i=>i.x+i.w),600))+120, Math.min(0, Math.min(...state.items.map(i=>i.y),0))-120, 0));
+      const floorC = transform(isoPoint(Math.max(600, Math.max(...state.items.map(i=>i.x+i.w),600))+120, Math.max(400, Math.max(...state.items.map(i=>i.y+i.d),400))+120, 0));
+      const floorD = transform(isoPoint(Math.min(0, Math.min(...state.items.map(i=>i.x),0))-120, Math.max(400, Math.max(...state.items.map(i=>i.y+i.d),400))+120, 0));
+      out += `<polygon class="floor-shadow" points="${polygon([floorA,floorB,floorC,floorD])}"/>`;
+      ghosts.forEach((item, index) => {
+        const a=transform(isoPoint(item.x,item.y,item.z+item.h)), b=transform(isoPoint(item.x+item.w,item.y,item.z+item.h)), c=transform(isoPoint(item.x+item.w,item.y+item.d,item.z+item.h)), d=transform(isoPoint(item.x,item.y+item.d,item.z+item.h));
+        out += `<g class="svg-ghost" data-placement="${index}"><polygon class="ghost-top" points="${polygon([a,b,c,d])}"/><text x="${((a.x+b.x+c.x+d.x)/4).toFixed(1)}" y="${((a.y+b.y+c.y+d.y)/4).toFixed(1)}">${item.candidate.rotated ? '↻ ' : ''}ADD</text><title>Place at ${item.x}, ${item.y}, ${item.z} mm</title></g>`;
+      });
+      const sorted = [...state.items].sort((a,b) => (a.z+b.z+a.y+b.y+a.x+b.x) - (b.z+a.z+b.y+a.y+b.x+a.x));
+      sorted.forEach(item => {
+        const a=transform(isoPoint(item.x,item.y,item.z)), b=transform(isoPoint(item.x+item.w,item.y,item.z)), c=transform(isoPoint(item.x+item.w,item.y+item.d,item.z)), d=transform(isoPoint(item.x,item.y+item.d,item.z));
+        const at=transform(isoPoint(item.x,item.y,item.z+item.height)), bt=transform(isoPoint(item.x+item.w,item.y,item.z+item.height)), ct=transform(isoPoint(item.x+item.w,item.y+item.d,item.z+item.height)), dt=transform(isoPoint(item.x,item.y+item.d,item.z+item.height));
+        const selected = item.instanceId === state.selectedItemId;
+        const klass = `svg-object ${item.type === 'lid' ? 'lid' : item.w !== item.d && item.w < 500 ? 'alt' : ''} ${selected ? 'selected' : ''}`;
+        const label = item.type === 'lid' ? 'LID' : `${item.w}×${item.d}`;
+        const tx = (at.x+bt.x+ct.x+dt.x)/4, ty=(at.y+bt.y+ct.y+dt.y)/4;
+        out += `<g class="${klass}" data-item="${item.instanceId}"><polygon class="face top" points="${polygon([at,bt,ct,dt])}"/><polygon class="face front" points="${polygon([dt,ct,c,d])}"/><polygon class="face side" points="${polygon([bt,ct,c,b])}"/><text x="${tx.toFixed(1)}" y="${(ty+8).toFixed(1)}">${label}</text><title>${displayName(product(item.productId))} · ${labelDims({width:item.w,depth:item.d,height:item.height})}</title></g>`;
+      });
+      svg.innerHTML = out;
+      svg.querySelectorAll('[data-item]').forEach(node => node.addEventListener('click', () => selectItem(node.dataset.item)));
+      svg.querySelectorAll('[data-placement]').forEach(node => node.addEventListener('click', () => addCandidate(candidates[Number(node.dataset.placement)])));
+    }
+
+    function render() {
+      const candidates = getCandidates(state.selectedProductId);
+      const lidSuggestions = getLidSuggestions(state.selectedProductId);
+      const selected = product(state.selectedProductId);
+      $('selectedProductLabel').textContent = selected ? `${displayName(selected)} · ${labelDims(selected)}` : 'none';
+      $('placementCount').textContent = candidates.length ? `${candidates.length} highlighted position${candidates.length === 1 ? '' : 's'}` : lidSuggestions.length ? 'Support lid available' : 'No valid positions';
+      $('stageHint').textContent = state.selectedItemId ? 'Selected item outlined in coral' : 'Click an item to inspect it';
+      $('stageEmpty').hidden = state.items.length > 0;
+      renderCatalogue(); renderSummary(); renderFeedback(candidates, lidSuggestions); renderPlacementChoices(candidates, lidSuggestions); renderInspector(); renderSvg(candidates);
+    }
+
+    $('familyFilters').addEventListener('click', event => {
+      const button = event.target.closest('[data-family]'); if (!button) return;
+      state.familyFilter = button.dataset.family;
+      $('familyFilters').querySelectorAll('.filter').forEach(el => el.classList.toggle('active', el === button));
+      renderCatalogue();
+    });
+    $('searchInput').addEventListener('input', event => { state.search = event.target.value; renderCatalogue(); });
+    $('newStackButton').addEventListener('click', newStack);
+    $('resetButton').addEventListener('click', resetDemo);
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { state.selectedItemId = null; state.notice = null; render(); } });
+
+    load();
+    render();
+  </script>
+</body>
+</html>
