@@ -55,11 +55,28 @@
     .catalogue-card { position: relative; margin: 5px 0; padding: 12px 11px; border: 1px solid transparent; border-radius: 13px; background: #fafcf9; transition: .16s ease; }
     .catalogue-card:hover { border-color: #c6ddd2; }
     .catalogue-card.selected { border-color: var(--accent); background: #fff8f3; box-shadow: 0 5px 15px rgba(222,109,69,.12); }
+    .catalogue-card.catalogue-jump { animation: catalogue-jump .9s ease; }
+    @keyframes catalogue-jump {
+      0%, 100% { box-shadow: 0 5px 15px rgba(222,109,69,.12); }
+      45% { box-shadow: 0 0 0 4px rgba(222,109,69,.28), 0 8px 22px rgba(222,109,69,.2); }
+    }
     .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .card-name { font-weight: 850; font-size: 12px; line-height: 1.25; }
     .card-price { color: var(--accent-dark); font-weight: 850; font-size: 12px; white-space: nowrap; }
     .card-meta { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; color: var(--muted); font-size: 10px; }
     .chip { display: inline-flex; align-items: center; padding: 4px 6px; border-radius: 6px; background: #eef3ee; }
+    .catalogue-visual { display: grid; grid-template-columns: 54px 1fr auto; align-items: center; gap: 7px; min-height: 42px; margin-top: 6px; color: var(--muted); font-size: 9px; }
+    .mini-iso { display: block; width: 54px; height: 42px; overflow: visible; }
+    .mini-iso .mini-face { fill: var(--height-colour); stroke: rgba(23,49,45,.42); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .mini-iso .mini-top { fill-opacity: .7; }
+    .mini-iso .mini-front { fill-opacity: .88; }
+    .mini-iso .mini-side { fill-opacity: 1; }
+    .catalogue-visual-label { font-weight: 850; text-transform: uppercase; letter-spacing: .06em; }
+    .catalogue-visual-value { color: var(--ink); font-weight: 850; white-space: nowrap; }
+    .catalogue-visual.shallow { --height-colour: var(--mint); }
+    .catalogue-visual.medium { --height-colour: var(--blue); }
+    .catalogue-visual.tall { --height-colour: var(--accent); }
+    .catalogue-visual.lid-height { --height-colour: var(--gold); }
     .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-top: 9px; }
     .card-actions a { color: var(--mint); font-size: 10px; font-weight: 800; text-decoration: none; }
     .card-actions a:hover { text-decoration: underline; }
@@ -107,6 +124,13 @@
     .inspector-grid div { padding: 8px; border-radius: 8px; background: #f5f8f4; }
     .inspector-grid b { display: block; font-size: 11px; }
     .inspector-grid span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+    .height-stepper { display: grid; grid-template-columns: 38px 1fr 38px; align-items: stretch; gap: 7px; margin-top: 10px; }
+    .height-stepper button { border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); font-size: 20px; font-weight: 700; line-height: 1; }
+    .height-stepper button:hover:not(:disabled) { border-color: var(--accent); background: #fff8f3; color: var(--accent-dark); }
+    .height-stepper button:disabled { cursor: not-allowed; opacity: .3; }
+    .height-stepper-value { padding: 7px 9px; border-radius: 9px; background: #f5f8f4; text-align: center; }
+    .height-stepper-value strong { display: block; font-size: 14px; }
+    .height-stepper-value span { display: block; margin-top: 1px; color: var(--muted); font-size: 9px; }
     .stack-items { display: grid; gap: 6px; max-height: 260px; overflow: auto; }
     .stack-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px; border: 1px solid transparent; border-radius: 9px; background: #f7faf7; color: var(--ink); text-align: left; }
     .stack-item:hover, .stack-item.selected { border-color: var(--accent); background: #fff8f3; }
@@ -133,9 +157,21 @@
     .svg-object.lid .side { fill: #aa7427; }
     .svg-object.selected .face { stroke: #ef6f44; stroke-width: 4; }
     .svg-object text { pointer-events: none; fill: #fff; font-size: 12px; font-weight: 900; text-anchor: middle; dominant-baseline: middle; paint-order: stroke; stroke: rgba(23,49,45,.5); stroke-width: 3px; }
-    .svg-ghost { cursor: pointer; opacity: .46; }
-    .svg-ghost .ghost-top { fill: #f08b62; stroke: #b9512f; stroke-width: 2; stroke-dasharray: 7 5; vector-effect: non-scaling-stroke; }
-    .svg-ghost text { fill: #8f422a; text-anchor: middle; font-size: 11px; font-weight: 900; pointer-events: none; }
+    .svg-ghost { cursor: pointer; }
+    .svg-ghost .ghost-top { fill: var(--target-color); fill-opacity: .07; stroke: var(--target-color); stroke-opacity: .65; stroke-width: 2; stroke-dasharray: 7 5; vector-effect: non-scaling-stroke; pointer-events: none; opacity: .5; transition: opacity .15s ease, fill-opacity .15s ease; }
+    .svg-ghost .placement-hit { fill: #fff; stroke: var(--target-color); stroke-width: 4; vector-effect: non-scaling-stroke; filter: drop-shadow(0 3px 4px rgba(23,49,45,.24)); transition: .15s ease; }
+    .svg-ghost .placement-plus { fill: var(--target-color); stroke: none; text-anchor: middle; dominant-baseline: central; font-size: 23px; font-weight: 700; pointer-events: none; }
+    .svg-ghost:hover .placement-hit { fill: var(--target-color); transform: scale(1.08); transform-box: fill-box; transform-origin: center; }
+    .svg-ghost:hover .placement-plus { fill: #fff; }
+    .svg-ghost:hover .ghost-top, .svg-ghost:focus .ghost-top { opacity: 1; fill-opacity: .18; stroke-opacity: 1; }
+    .svg-ghost:focus { outline: none; }
+    .svg-ghost:focus .placement-hit { fill: var(--target-color); stroke: #fff; stroke-width: 4; }
+    .svg-ghost:focus .placement-plus { fill: #fff; }
+    .svg-ghost.lid-target .ghost-top { stroke-dasharray: 3 4; }
+    .height-guide { pointer-events: none; }
+    .height-guide .height-line, .height-guide .height-cap { stroke: var(--ink); stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .height-guide .height-arrow { fill: var(--ink); }
+    .height-guide .height-label { fill: var(--ink); font-size: 13px; font-weight: 900; text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: rgba(255,255,255,.92); stroke-width: 5px; stroke-linejoin: round; }
     .floor-shadow { fill: rgba(47,83,66,.14); }
     @media (max-width: 1180px) {
       .workspace { grid-template-columns: 285px minmax(400px, 1fr); }
@@ -266,6 +302,7 @@
     const LIDS = CATALOGUE.filter(item => item.type === 'lid');
     const STORAGE_KEY = 'eurobox-stacker-v1';
     const EPS = 0.001;
+    const TARGET_COLOURS = ['#c2410c', '#2563eb', '#7c3aed', '#0f766e', '#be123c', '#4d7c0f', '#a16207', '#0369a1'];
     let state = { items: [], selectedProductId: 'euro-300-200-175', selectedItemId: null, familyFilter: 'all', search: '', notice: null };
     let nextNumber = 1;
 
@@ -278,6 +315,16 @@
     const zTop = item => item.z + item.height;
     const orient = (item, rotated) => rotated ? { w:item.depth, d:item.width } : { w:item.width, d:item.depth };
     const displayName = item => item.type === 'lid' ? `${item.width} × ${item.depth} support lid` : item.name;
+    const catalogueName = item => item.type === 'lid' ? displayName(item) : item.name.replace(/^\d+(?:\.\d+)?L\s+/i, '');
+
+    function catalogueIso(item) {
+      // All thumbnails use one projection scale, so their apparent dimensions
+      // remain directly comparable throughout the catalogue.
+      const point = (x,y,z) => ({ x:36 + (x-y)*.07, y:30 + (x+y)*.035-z*.09 });
+      const a=point(0,0,0), b=point(item.width,0,0), c=point(item.width,item.depth,0), d=point(0,item.depth,0);
+      const at=point(0,0,item.height), bt=point(item.width,0,item.height), ct=point(item.width,item.depth,item.height), dt=point(0,item.depth,item.height);
+      return `<svg class="mini-iso" viewBox="0 0 86 70" role="img" aria-label="Proportional isometric view, ${item.width} by ${item.depth} by ${item.height} millimetres"><polygon class="mini-face mini-top" points="${polygon([at,bt,ct,dt])}"/><polygon class="mini-face mini-front" points="${polygon([dt,ct,c,d])}"/><polygon class="mini-face mini-side" points="${polygon([bt,ct,c,b])}"/></svg>`;
+    }
 
     function makeItem(productId, x, y, z, rotated = false) {
       const p = product(productId);
@@ -384,8 +431,13 @@
         const dims = orient(p, rotated);
         for (const support of supports) {
           if (dims.w > support.w + EPS || dims.d > support.d + EPS) continue;
-          const xs = [support.x, support.x + support.w - dims.w];
-          const ys = [support.y, support.y + support.d - dims.d];
+          // Only offer layouts whose repeated footprint spans the whole support.
+          // This avoids suggesting placements that inevitably leave unusable strips.
+          const columns = support.w / dims.w;
+          const rows = support.d / dims.d;
+          if (!same(columns, Math.round(columns)) || !same(rows, Math.round(rows))) continue;
+          const xs = Array.from({ length:Math.round(columns) }, (_, index) => support.x + index * dims.w);
+          const ys = Array.from({ length:Math.round(rows) }, (_, index) => support.y + index * dims.d);
           for (const x of xs) for (const y of ys) add(x, y, zTop(support), rotated);
         }
       }
@@ -464,18 +516,19 @@
       save(); render();
     }
 
-    function replaceSelected(productId) {
+    function replaceSelected(productId, preferredRotated = null) {
       const old = selectedItem();
       const p = product(productId);
       if (!old || old.type !== 'box' || !p || p.type !== 'box') return;
       const without = state.items.filter(item => item.instanceId !== old.instanceId);
       const choices = [];
-      for (const rotated of (p.width === p.depth ? [false] : [false, true])) {
+      const rotations = p.width === p.depth ? [false] : preferredRotated === null ? [false, true] : [preferredRotated, !preferredRotated];
+      for (const rotated of rotations) {
         const dims = orient(p, rotated);
         const candidate = { productId, type:'box', x:old.x, y:old.y, z:old.z, w:dims.w, d:dims.d, height:p.height, rotated };
         if (isValidCandidate(candidate, without)) choices.push(candidate);
       }
-      if (!choices.length || !allStateValid(without)) {
+      if (!choices.length) {
         setNotice('error', 'This replacement would break the stack', 'Remove or reposition the boxes above this item first, then try again.');
         return;
       }
@@ -498,10 +551,30 @@
       render();
     }
 
-    function selectItem(id) {
+    function selectItem(id, revealInCatalogue = false) {
+      const item = state.items.find(candidate => candidate.instanceId === id);
       state.selectedItemId = id;
       state.notice = null;
+      if (revealInCatalogue && item) {
+        const p = product(item.productId);
+        const query = state.search.trim().toLowerCase();
+        const haystack = `${p.name} ${p.sku} ${p.width} ${p.depth} ${p.height} ${p.capacity}`.toLowerCase();
+        const hiddenByCurrentView = (state.familyFilter !== 'all' && p.family !== state.familyFilter) || (query && !haystack.includes(query));
+        state.selectedProductId = item.productId;
+        if (hiddenByCurrentView) {
+          state.familyFilter = 'all';
+          state.search = '';
+          $('searchInput').value = '';
+          $('familyFilters').querySelectorAll('.filter').forEach(button => button.classList.toggle('active', button.dataset.family === 'all'));
+        }
+      }
       render();
+      if (revealInCatalogue && item) requestAnimationFrame(() => {
+        const card = $('catalogueList').querySelector(`[data-product="${item.productId}"]`);
+        if (!card) return;
+        card.scrollIntoView({ behavior:'smooth', block:'center' });
+        card.classList.add('catalogue-jump');
+      });
     }
 
     function renderCatalogue() {
@@ -514,9 +587,12 @@
       $('catalogueList').innerHTML = list.length ? list.map(item => {
         const selected = item.id === state.selectedProductId;
         const isLid = item.type === 'lid';
+        const heightBand = isLid ? 'lid-height' : item.height <= 120 ? 'shallow' : item.height <= 220 ? 'medium' : 'tall';
+        const heightLabel = isLid ? 'lid' : item.height <= 120 ? 'shallow' : item.height <= 220 ? 'medium' : 'tall';
         return `<article class="catalogue-card ${selected ? 'selected' : ''}" data-product="${item.id}">
-          <div class="card-top"><div class="card-name">${displayName(item)}</div><div class="card-price">${money(item.price)}</div></div>
+          <div class="card-top"><div class="card-name">${catalogueName(item)}</div><div class="card-price">${money(item.price)}</div></div>
           <div class="card-meta"><span class="chip">${labelDims(item)}</span><span class="chip">${item.capacity}</span></div>
+          <div class="catalogue-visual ${heightBand}">${catalogueIso(item)}<span class="catalogue-visual-label">${heightLabel}</span><span class="catalogue-visual-value">${item.height} mm</span></div>
           <div class="card-actions"><a href="${item.source}" target="_blank" rel="noreferrer">View product ↗</a><button class="mini-button ${selected ? 'selected-action' : ''}" data-select="${item.id}">${selected ? 'Selected' : isLid ? 'Select lid' : 'Select box'}</button></div>
         </article>`;
       }).join('') : `<div class="inspector-empty" style="padding:14px">No catalogue items match that search.</div>`;
@@ -594,17 +670,42 @@
       const el = $('inspector');
       if (!item) { el.innerHTML = '<div class="inspector-empty">Click a box, lid, or stack item to inspect it. Use the remove and replace controls once an item is selected.</div>'; return; }
       const p = product(item.productId);
+      const heightFamily = item.type === 'box' ? BOXES.filter(candidate =>
+        (candidate.width === p.width && candidate.depth === p.depth) || (candidate.width === p.depth && candidate.depth === p.width)
+      ).sort((a,b) => a.height - b.height) : [];
+      const shorter = [...heightFamily].reverse().find(candidate => candidate.height < p.height);
+      const taller = heightFamily.find(candidate => candidate.height > p.height);
       const replacementOptions = item.type === 'box' ? BOXES.filter(candidate => candidate.id !== item.productId && candidate.width <= Math.max(item.w, item.d) && candidate.depth <= Math.max(item.w, item.d)).slice(0, 5) : [];
       el.innerHTML = `<div class="inspector-name">${displayName(p)}</div><div class="inspector-id">${p.sku} · ${item.rotated ? 'rotated 90°' : 'standard orientation'}</div>
         <div class="inspector-grid"><div><b>${item.w} × ${item.d}</b><span>footprint · mm</span></div><div><b>${item.height}</b><span>height · mm</span></div><div><b>${item.x}, ${item.y}, ${item.z}</b><span>position · mm</span></div><div><b>${money(p.price)}</b><span>guide price</span></div></div>
+        ${item.type === 'box' ? `<div class="height-stepper" aria-label="Change box height"><button id="heightDown" aria-label="${shorter ? `Use ${shorter.height} millimetre height` : 'No shorter size'}" ${shorter ? '' : 'disabled'} title="${shorter ? `${shorter.height} mm · ${displayName(shorter)}` : 'No shorter catalogue size'}">−</button><div class="height-stepper-value"><strong>${item.height} mm</strong><span>catalogue height</span></div><button id="heightUp" aria-label="${taller ? `Use ${taller.height} millimetre height` : 'No taller size'}" ${taller ? '' : 'disabled'} title="${taller ? `${taller.height} mm · ${displayName(taller)}` : 'No taller catalogue size'}">+</button></div>` : ''}
         <div style="display:flex; gap:7px; margin-top:13px"><button class="button danger" id="removeSelected" style="flex:1">Remove</button><a class="button" href="${p.source}" target="_blank" rel="noreferrer" style="flex:1; text-align:center; text-decoration:none">Source ↗</a></div>
         ${replacementOptions.length ? `<div style="margin-top:14px"><h3 style="margin:0 0 8px; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted)">Replace with</h3><div style="display:grid; gap:5px">${replacementOptions.map(candidate => `<button class="stack-item" data-replace="${candidate.id}"><span class="stack-swatch"></span><span class="stack-item-copy"><strong>${candidate.name}</strong><span>${candidate.width} × ${candidate.depth} × ${candidate.height} mm</span></span><span class="stack-item-price">${money(candidate.price)}</span></button>`).join('')}</div></div>` : ''}`;
       $('removeSelected').addEventListener('click', removeSelected);
+      if (shorter) $('heightDown').addEventListener('click', () => replaceSelected(shorter.id, item.rotated));
+      if (taller) $('heightUp').addEventListener('click', () => replaceSelected(taller.id, item.rotated));
       el.querySelectorAll('[data-replace]').forEach(button => button.addEventListener('click', () => replaceSelected(button.dataset.replace)));
     }
 
     function isoPoint(x, y, z) {
       return { x:(x-y)*.82, y:(x+y)*.41-z*.92 };
+    }
+    function compareIsoDepth(a, b) {
+      // The view direction implied by isoPoint is (1, 1, .82/.92). Sort by
+      // each object's fixed world-space origin so box dimensions cannot make a
+      // large lower box paint over a smaller box that is stacked on top of it.
+      const aDepth = a.x + a.y + a.z * (.82/.92);
+      const bDepth = b.x + b.y + b.z * (.82/.92);
+      if (!same(aDepth, bDepth)) return aDepth - bDepth;
+
+      // Objects on the same camera-depth plane still need physical tie-breakers;
+      // never fall back to array/insertion order, which changes after edits.
+      const aScreen = isoPoint(a.x, a.y, a.z);
+      const bScreen = isoPoint(b.x, b.y, b.z);
+      return (aScreen.y - bScreen.y) || (aScreen.x - bScreen.x) ||
+        (a.height - b.height) || (a.w - b.w) || (a.d - b.d) ||
+        String(a.productId).localeCompare(String(b.productId)) ||
+        String(a.instanceId).localeCompare(String(b.instanceId));
     }
     function polygon(points) { return points.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' '); }
     function renderSvg(candidates) {
@@ -612,11 +713,17 @@
       const all = state.items.map(item => ({ x:item.x, y:item.y, z:item.z, w:item.w, d:item.d, h:item.height }));
       // Keep one visual hit target per anchor. Standard orientation is first in the
       // candidate list, while every orientation remains available in the explicit
-      // snap-target buttons below the view.
+      // snap-target buttons below the view. Keep the candidate on the visual target
+      // so a de-duplicated target cannot accidentally use a different array index.
       const ghosts = candidates.filter((candidate, index) => candidates.findIndex(other => same(other.x, candidate.x) && same(other.y, candidate.y) && same(other.z, candidate.z)) === index).map(c => ({ x:c.x, y:c.y, z:c.z, w:c.w, d:c.d, h:c.height, candidate:c }));
       const points = [];
-      [...all, ...ghosts].forEach(item => {
+      all.forEach(item => {
         [isoPoint(item.x,item.y,item.z), isoPoint(item.x+item.w,item.y,item.z), isoPoint(item.x+item.w,item.y+item.d,item.z), isoPoint(item.x,item.y+item.d,item.z), isoPoint(item.x,item.y,item.z+item.h), isoPoint(item.x+item.w,item.y,item.z+item.h), isoPoint(item.x+item.w,item.y+item.d,item.z+item.h), isoPoint(item.x,item.y+item.d,item.z+item.h)].forEach(p => points.push(p));
+      });
+      // A placement target is a surface marker, so only its four visible points
+      // should affect framing. Its prospective height is not on screen yet.
+      ghosts.forEach(item => {
+        [isoPoint(item.x,item.y,item.z), isoPoint(item.x+item.w,item.y,item.z), isoPoint(item.x+item.w,item.y+item.d,item.z), isoPoint(item.x,item.y+item.d,item.z)].forEach(p => points.push(p));
       });
       if (!points.length) { svg.innerHTML = ''; return; }
       const minX = Math.min(...points.map(p=>p.x)), maxX = Math.max(...points.map(p=>p.x)), minY = Math.min(...points.map(p=>p.y)), maxY = Math.max(...points.map(p=>p.y));
@@ -628,11 +735,8 @@
       const floorC = transform(isoPoint(Math.max(600, Math.max(...state.items.map(i=>i.x+i.w),600))+120, Math.max(400, Math.max(...state.items.map(i=>i.y+i.d),400))+120, 0));
       const floorD = transform(isoPoint(Math.min(0, Math.min(...state.items.map(i=>i.x),0))-120, Math.max(400, Math.max(...state.items.map(i=>i.y+i.d),400))+120, 0));
       out += `<polygon class="floor-shadow" points="${polygon([floorA,floorB,floorC,floorD])}"/>`;
-      ghosts.forEach((item, index) => {
-        const a=transform(isoPoint(item.x,item.y,item.z+item.h)), b=transform(isoPoint(item.x+item.w,item.y,item.z+item.h)), c=transform(isoPoint(item.x+item.w,item.y+item.d,item.z+item.h)), d=transform(isoPoint(item.x,item.y+item.d,item.z+item.h));
-        out += `<g class="svg-ghost" data-placement="${index}"><polygon class="ghost-top" points="${polygon([a,b,c,d])}"/><text x="${((a.x+b.x+c.x+d.x)/4).toFixed(1)}" y="${((a.y+b.y+c.y+d.y)/4).toFixed(1)}">${item.candidate.rotated ? '↻ ' : ''}ADD</text><title>Place at ${item.x}, ${item.y}, ${item.z} mm</title></g>`;
-      });
-      const sorted = [...state.items].sort((a,b) => (a.z+b.z+a.y+b.y+a.x+b.x) - (b.z+a.z+b.y+a.y+b.x+a.x));
+      // Draw objects back-to-front using the actual isometric camera direction.
+      const sorted = [...state.items].sort(compareIsoDepth);
       sorted.forEach(item => {
         const a=transform(isoPoint(item.x,item.y,item.z)), b=transform(isoPoint(item.x+item.w,item.y,item.z)), c=transform(isoPoint(item.x+item.w,item.y+item.d,item.z)), d=transform(isoPoint(item.x,item.y+item.d,item.z));
         const at=transform(isoPoint(item.x,item.y,item.z+item.height)), bt=transform(isoPoint(item.x+item.w,item.y,item.z+item.height)), ct=transform(isoPoint(item.x+item.w,item.y+item.d,item.z+item.height)), dt=transform(isoPoint(item.x,item.y+item.d,item.z+item.height));
@@ -642,9 +746,41 @@
         const tx = (at.x+bt.x+ct.x+dt.x)/4, ty=(at.y+bt.y+ct.y+dt.y)/4;
         out += `<g class="${klass}" data-item="${item.instanceId}"><polygon class="face top" points="${polygon([at,bt,ct,dt])}"/><polygon class="face front" points="${polygon([dt,ct,c,d])}"/><polygon class="face side" points="${polygon([bt,ct,c,b])}"/><text x="${tx.toFixed(1)}" y="${(ty+8).toFixed(1)}">${label}</text><title>${displayName(product(item.productId))} · ${labelDims({width:item.w,depth:item.d,height:item.height})}</title></g>`;
       });
+      if (state.items.length) {
+        const totalHeight = Math.max(...state.items.map(zTop));
+        // Attach the gauge to a real, visible corner: the leftmost front corner
+        // of a box or lid that sits on the floor.
+        const floorItems = state.items.filter(item => same(item.z, 0));
+        const anchor = floorItems.map(item => transform(isoPoint(item.x, item.y + item.d, 0))).sort((a,b) => a.x - b.x)[0];
+        const guideX = anchor.x;
+        const guideBottom = anchor.y;
+        const guideTop = guideBottom - totalHeight * .92 * scale;
+        const guideMiddle = (guideTop + guideBottom) / 2;
+        out += `<g class="height-guide" aria-label="Total height ${Math.round(totalHeight)} millimetres">
+          <line class="height-line" x1="${guideX.toFixed(1)}" y1="${guideTop.toFixed(1)}" x2="${guideX.toFixed(1)}" y2="${guideBottom.toFixed(1)}"/>
+          <line class="height-cap" x1="${(guideX-8).toFixed(1)}" y1="${guideTop.toFixed(1)}" x2="${(guideX+8).toFixed(1)}" y2="${guideTop.toFixed(1)}"/>
+          <line class="height-cap" x1="${(guideX-8).toFixed(1)}" y1="${guideBottom.toFixed(1)}" x2="${(guideX+8).toFixed(1)}" y2="${guideBottom.toFixed(1)}"/>
+          <polygon class="height-arrow" points="${guideX.toFixed(1)},${guideTop.toFixed(1)} ${(guideX-4.5).toFixed(1)},${(guideTop+9).toFixed(1)} ${(guideX+4.5).toFixed(1)},${(guideTop+9).toFixed(1)}"/>
+          <polygon class="height-arrow" points="${guideX.toFixed(1)},${guideBottom.toFixed(1)} ${(guideX-4.5).toFixed(1)},${(guideBottom-9).toFixed(1)} ${(guideX+4.5).toFixed(1)},${(guideBottom-9).toFixed(1)}"/>
+          <text class="height-label" x="${(guideX-13).toFixed(1)}" y="${guideMiddle.toFixed(1)}" transform="rotate(-90 ${(guideX-13).toFixed(1)} ${guideMiddle.toFixed(1)})">${Math.round(totalHeight)} mm</text>
+        </g>`;
+      }
+      // Placement targets belong on the supporting surface (the candidate's base
+      // elevation), not at the top of the box that has not been added yet. Paint
+      // them last so the support below does not hide the clickable highlight.
+      ghosts.forEach((item, index) => {
+        const a=transform(isoPoint(item.x,item.y,item.z)), b=transform(isoPoint(item.x+item.w,item.y,item.z)), c=transform(isoPoint(item.x+item.w,item.y+item.d,item.z)), d=transform(isoPoint(item.x,item.y+item.d,item.z));
+        const targetX = (a.x+b.x+c.x+d.x)/4, targetY = (a.y+b.y+c.y+d.y)/4;
+        const targetColour = TARGET_COLOURS[index % TARGET_COLOURS.length];
+        out += `<g class="svg-ghost ${item.candidate.type === 'lid' ? 'lid-target' : ''}" style="--target-color:${targetColour}" data-placement="${index}" role="button" tabindex="0" aria-label="Add at ${item.x}, ${item.y}, ${item.z} millimetres"><polygon class="ghost-top" points="${polygon([a,b,c,d])}"/><circle class="placement-hit" cx="${targetX.toFixed(1)}" cy="${targetY.toFixed(1)}" r="18"/><text class="placement-plus" x="${targetX.toFixed(1)}" y="${(targetY-1).toFixed(1)}">+</text><title>Place at ${item.x}, ${item.y}, ${item.z} mm${item.candidate.rotated ? ' (rotated)' : ''}</title></g>`;
+      });
       svg.innerHTML = out;
-      svg.querySelectorAll('[data-item]').forEach(node => node.addEventListener('click', () => selectItem(node.dataset.item)));
-      svg.querySelectorAll('[data-placement]').forEach(node => node.addEventListener('click', () => addCandidate(candidates[Number(node.dataset.placement)])));
+      svg.querySelectorAll('[data-item]').forEach(node => node.addEventListener('click', () => selectItem(node.dataset.item, true)));
+      svg.querySelectorAll('[data-placement]').forEach(node => {
+        const place = () => addCandidate(ghosts[Number(node.dataset.placement)].candidate);
+        node.addEventListener('click', place);
+        node.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); place(); } });
+      });
     }
 
     function render() {
